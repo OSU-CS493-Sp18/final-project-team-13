@@ -4,7 +4,10 @@ const port = process.env.PORT || 3000;
 const morgan = require('morgan');
 const api = require('./api');
 
+
 app.use(morgan('dev'));
+
+app.locals.mysqlPool = require('./lib/db').mysqlPool;
 
 
 app.use('/', api);
