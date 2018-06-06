@@ -1,4 +1,13 @@
-CREATE DATABASE IF NOT EXISTS musicdb;
+CREATE DATABASE IF NOT EXISTS music-api;
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `artists`;
 CREATE TABLE `artists` (
