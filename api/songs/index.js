@@ -33,10 +33,6 @@ router.get('/', (req, res) => {
     });
 });
 
-/*
- * Executes a MySQL query to fetch the total number of songs.  Returns
- * a Promise that resolves to this count.
- */
 function getSongsCount(mysqlPool) {
     return new Promise((resolve, reject) => {
       mysqlPool.query('SELECT COUNT(*) AS count FROM songs', function (err, results) {
@@ -49,10 +45,6 @@ function getSongsCount(mysqlPool) {
     });
 }
 
-/*
- * Executes a MySQL query to return a single page of songs.  Returns a
- * Promise that resolves to an array containing the fetched page of songs.
- */
 function getSongsPage(page, totalCount, mysqlPool) {
     return new Promise((resolve, reject) => {
       /*
@@ -83,8 +75,28 @@ function getSongsPage(page, totalCount, mysqlPool) {
         }
       );
     });
-  }
+}
 
+// ROUTE: /songs
+// PARAMS:
+// QUERIES: 
+router.post('/', (req, res) => {
+  const mysqlPool = req.app.locals.mysqlPool;
+  insertNewBusiness(req.body, mysqlPool)
+    .then((id) => {
+      res.status(201).json({
+        id: id,
+        links: {
+          business: `/businesss/${id}`
+        }
+      });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Error inserting business into DB.  Please try again later."
+      });
+    });
+});
 
 
 // ROUTE: /songs/songID
