@@ -130,16 +130,116 @@ function insertNewSong(song, mysqlPool) {
   });
 }
 
-
 // ROUTE: /songs/songID
 // PARAMS:
 // QUERIES: 
 router.get('/:songID', (req, res) => {
-
+  const mysqlPool = req.app.locals.mysqlPool;
+  const songID = parseInt(req.params.songID);
+  getSongByID(songID, mysqlPool)
+    .then((song) => {
+      if (song) {
+        res.status(200).json(song);
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to fetch song.  Please try again later."
+      });
+    });
 });
 
+function getSongByID(songID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('SELECT * FROM songs WHERE id = ?', [ songID ], function (err, results) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]);
+      }
+    });
+  })
+}
 
+// ROUTE: /songs/songID
+// PARAMS:
+// QUERIES: 
+router.put('/:songID', function (req, res, next) {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const songID = parseInt(req.params.songID);
+  if (validation.validateAgainstSchema(req.body, songSchema)) {
+    replaceSongByID(songID, req.body, mysqlPool)
+      .then((updateSuccessful) => {
+        if (updateSuccessful) {
+          res.status(200).json({
+            links: {
+              song: `/songs/${songID}`
+            }
+          });
+        } else {
+          next();
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({
+          error: "Unable to update specified song.  Please try again later."
+        });
+      });
+  } else {
+    res.status(400).json({
+      error: "Request body is not a valid song object"
+    });
+  }
+});
 
+function replaceSongByID(songID, song, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    song = validation.extractValidFields(song, songSchema);
+    mysqlPool.query('UPDATE songs SET ? WHERE id = ?', [ song, songID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
+}
+
+// ROUTE: /songs/songID
+// PARAMS:
+// QUERIES: 
+router.delete('/:songID', function (req, res, next) {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const songID = parseInt(req.params.songID);
+  deleteSongByID(songID, mysqlPool)
+    .then((deleteSuccessful) => {
+      if (deleteSuccessful) {
+        res.status(204).end();
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to delete song.  Please try again later."
+      });
+    });
+});
+
+function deleteSongByID(songID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('DELETE FROM songs WHERE id = ?', [ songID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
+}
 
 
 exports.router = router;
