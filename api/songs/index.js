@@ -1,4 +1,12 @@
 const router = require('express').Router();
+const validation = require('../lib/validation');
+
+const songSchema = {
+  ownerid: { required: true },
+  title: { required: true },
+  artist: { required: true },
+  album: { required: true },
+};
 
 // ROUTE: /songs
 // PARAMS:
@@ -82,21 +90,45 @@ function getSongsPage(page, totalCount, mysqlPool) {
 // QUERIES: 
 router.post('/', (req, res) => {
   const mysqlPool = req.app.locals.mysqlPool;
-  insertNewBusiness(req.body, mysqlPool)
-    .then((id) => {
-      res.status(201).json({
-        id: id,
-        links: {
-          business: `/businesss/${id}`
-        }
+  if (validation.validateAgainstSchema(req.body, songSchema)) {
+    insertNewSong(req.body, mysqlPool)
+      .then((id) => {
+        res.status(201).json({
+          id: id,
+          links: {
+            song: `/song/${id}`
+          }
+        });
+      })
+      .catch((err) => {
+        res.status(500).json({
+          error: "Error inserting song into DB.  Please try again later."
+        });
       });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: "Error inserting business into DB.  Please try again later."
-      });
+  } else {
+    res.status(400).json({
+      error: "Request body is not a valid song object."
     });
+  }
 });
+
+function insertNewSong(song, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    song = validation.extractValidFields(song, songSchema);
+    song.id = null;
+    mysqlPool.query(
+      'INSERT INTO songs SET ?',
+      song,
+      function (err, result) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result.insertId);
+        }
+      }
+    );
+  });
+}
 
 
 // ROUTE: /songs/songID
