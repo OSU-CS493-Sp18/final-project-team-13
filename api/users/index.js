@@ -37,8 +37,10 @@ function insertNewUser(user, mongoDB) {
 //RETURNS: all users
 router.get('/', (req, res) => {
     const mongoDB = req.app.locals.mongoDB;
-
-    mongoDB.collection('users').find({}).toArray()
+    const projection = { password: 0 };
+    mongoDB.collection('users').find({})
+    .project(projection)
+    .toArray()
         .then( (users) => {
             if (users){
                 res.status(200).json(users);
