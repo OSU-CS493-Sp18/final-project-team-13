@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const validation = require('../../lib/validation');
-
 const { requireAuthentication } = require('../../lib/auth');
+const ObjectId = require('mongodb').ObjectId;
 
 /*
  * Schema for playlist object.
@@ -134,10 +134,41 @@ router.get('/:playlistID', function (req, res) {
 		});
 });
 
+function getUserByID(userID, mongoDB, includePassword) {
+    const usersCollection = mongoDB.collection('users');
+    const projection = includePassword ? {} : { password: 0 };
+    return usersCollection
+        .find({ userID: userID })
+        .project(projection)
+        .toArray()
+        .then((results) => {
+            return Promise.resolve(results[0]);
+        });
+}
+
+function generateUserIDQuery(userID) {
+  if (ObjectId.isValid(userID)) {
+    return { _id: new ObjectId(userID) };
+  } else {
+    return { userid: userID };
+  }
+}
+
+function addPlaylistToUser(userID, playlistName, mongoDB) {
+  const usersCollection = mongoDB.collection('users');
+  const query = generateUserIDQuery(userID);
+  return usersCollection.updateOne(
+    query,
+    { $push: { playlists: playlistName } }
+  ).then(() => {
+    return Promise.resolve(playlistName);
+  });
+}
+
 /*
  * MySQL function to insert new playlist
  */
-function insertNewPlaylist(playlist, mysqlPool) {
+function insertNewPlaylist(user, playlist, mysqlPool, mongoDB) {
 	return new Promise((resolve, reject) => {
 		playlist = validation.extractValidFields(playlist, playlistSchema);
 		playlist.id = null;
@@ -152,7 +183,9 @@ function insertNewPlaylist(playlist, mysqlPool) {
 				}
 			}
 		);
-	});
+  }).then((id) => {
+    return addPlaylistToUser(user.userID, playlist.name, mongoDB);
+  });
 }
 
 /*
@@ -160,6 +193,7 @@ function insertNewPlaylist(playlist, mysqlPool) {
  */
 router.post('/:userID/playlists', requireAuthentication, (req, res) => {
   	const mysqlPool = req.app.locals.mysqlPool;
+	const mongoDB = req.app.locals.mongoDB;
 	if (req.user !== req.params.userID) {
 		res.status(403).json({
 			error: "Unauthorized to access that resource"
@@ -168,20 +202,34 @@ router.post('/:userID/playlists', requireAuthentication, (req, res) => {
 		req.body.userid = req.user;
 		console.log(req.body);
 		if (validation.validateAgainstSchema(req.body, playlistSchema)) {
-			insertNewPlaylist(req.body, mysqlPool)
-				.then((id) => {
-					res.status(201).json({
-						id: id,
-					links: {
-						playlist: `/playlists/${id}`
-					}
+		    username = req.body.userid;
+		    getUserByID(req.body.userid, mongoDB)
+			 .then((user) => {
+			   if (user) {
+				return insertNewPlaylist(user, req.body, mysqlPool, mongoDB);
+			   } else {
+				return Promise.reject(400);
+			   }
+			 })
+			 .then((id) => {
+			   res.status(201).json({
+				id: id,
+				links: {
+				  playlists: `/users/${username}/playlists`
+				}
+			   });
+			 })
+			 .catch((err) => {
+			   if (err === 400) {
+				res.status(400).json({
+				  error: err
 				});
-			})
-			.catch((err) => {
+			   } else {
 				res.status(500).json({
-					error: "Error inserting playlist into DB.  Please try again later."
+				  error: "Error inserting playlist into DB.  Please try again later."
 				});
-			});
+			   }
+			 });	
 		} else {
 			res.status(400).json({
 				error: "Request body is not a valid playlist object."
