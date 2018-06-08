@@ -317,7 +317,7 @@ router.get('/:userID/playlists', requireAuthentication, (req, res) => {
 			error: "Unauthorized to access that resource"
 		});
 	} else {
-		const userID = parseInt(req.params.userID);
+		const userID = req.params.userID;
 		getPlaylistsByOwnerID(userID, mysqlPool)
 			.then((playlists) => {
 				if (playlists) {

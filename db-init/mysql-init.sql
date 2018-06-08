@@ -48,7 +48,7 @@ DROP TABLE IF EXISTS `playlists`;
 CREATE TABLE `playlists` (
   `id` mediumint(9) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  `userid` mediumint(9) NOT NULL,
+  `userid` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_userid` (`userid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
