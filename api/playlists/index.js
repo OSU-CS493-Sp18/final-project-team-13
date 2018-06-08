@@ -5,7 +5,7 @@ const validation = require('../../lib/validation');
  * Schema for playlist object.
  */
 const playlistSchema = {
-  id: { required: true },
+  id: { required: false },
   name: { required: true },
   userid: { required: true }
 };
@@ -115,5 +115,62 @@ function getPlaylistsByOwnerID(userID, mysqlPool) {
   });
 }
 
+/*
+ * MySQL function to insert new playlist
+ */
+function insertNewPlaylist(playlist, mysqlPool) {
+	return new Promise((resolve, reject) => {
+		playlist = validation.extractValidFields(playlist, playlistSchema);
+		playlist.id = null;
+		mysqlPool.query(
+			'INSERT INTO playlists SET ?',
+			playlist,
+			function (err, result) {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(result.insertId);
+				}
+			}
+		);
+	});
+}
+
+/*
+ * MySQL function to update a playlist
+ */
+function replacePlaylistByID(playlistID, playlist, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    playlist = validation.extractValidFields(playlist, playlistSchema);
+    mysqlPool.query('UPDATE playlists SET ? WHERE id = ?', [ playlist, playlistID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
+}
+
+/*
+ * MySQL function to delete a playlist
+ */
+function deletePlaylistByID(playlistID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('DELETE FROM playlists WHERE id = ?', [ playlistID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
+
+}
+
 exports.router = router;
+exports.playlistSchema = playlistSchema;
 exports.getPlaylistsByOwnerID = getPlaylistsByOwnerID;
+exports.insertNewPlaylist = insertNewPlaylist;
+exports.replacePlaylistByID = replacePlaylistByID;
+exports.deletePlaylistByID = deletePlaylistByID;
