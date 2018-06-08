@@ -125,6 +125,66 @@ function getGenreByID(genreID, mysqlPool) {
   })
 }
 
+function getArtistsByGenreID(genreID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('SELECT name FROM artists WHERE genre = ?', [genreID], function (err, results) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  })
+}
+
+router.get('/:genreID/artists', (req, res) => {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const genreID = parseInt(req.params.genreID);
+  getArtistsByGenreID(genreID, mysqlPool)
+    .then((genre) => {
+      if (genre) {
+        res.status(200).json(genre);
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to fetch genre artists.  Please try again later."
+      });
+    });
+});
+
+function getAlbumsByGenreID(genreID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('SELECT title FROM albums WHERE genre = ?', [genreID], function (err, results) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  })
+}
+
+router.get('/:genreID/albums', (req, res) => {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const genreID = parseInt(req.params.genreID);
+  getAlbumsByGenreID(genreID, mysqlPool)
+    .then((genre) => {
+      if (genre) {
+        res.status(200).json(genre);
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to fetch genre songs.  Please try again later."
+      });
+    });
+});
+
 router.put('/:genreID', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   const genreID = parseInt(req.params.genreID);
