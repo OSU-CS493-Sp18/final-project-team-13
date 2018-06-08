@@ -1,7 +1,10 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 
+<<<<<<< HEAD
 const { generateAuthToken, requireAuthentication } = require('../../lib/auth');
+=======
+>>>>>>> dbb53d099b8b290af44e0125daf3bba62a4cfb07
 
 function validateUserObject(user, mongoDB) {
 
