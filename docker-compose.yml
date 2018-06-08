@@ -17,6 +17,9 @@ services:
       MONGO_PASSWORD: ${MONGO_PASSWORD}
       MONGO_HOST: mongo
       MONGO_PORT: 27017
+    links:
+      - mongo
+      - mysql
 
   mysql:
     build:
@@ -30,10 +33,8 @@ services:
       MYSQL_DATABASE: 'musicdb'
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-<<<<<<< HEAD
     ports:
       - 3306:3306
-=======
   
   mongo:
     image: mongo
@@ -43,15 +44,11 @@ services:
       - ./db-init/:/docker-entrypoint-initdb.d
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_USERNAME: ${MONGO_USER}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-
->>>>>>> 962899afb4363bc53a64f39a02bc38d4f7285e3a
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
 
 volumes:
   mysql-data:
     name: proj-mysql-data
   mongodb-data:
-    name: user-data
+    name: proj-mongo-data

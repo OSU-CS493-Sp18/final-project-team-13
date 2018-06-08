@@ -1,7 +1,13 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
+const { getPlaylistsByOwnerID } = require('./../playlists/index');
+const { playlistSchema } = require('./../playlists/index');
+const { insertNewPlaylist } = require('./../playlists/index');
+const { replacePlaylistByID } = require('./../playlists/index');
+const { deletePlaylistByID } = require('./../playlists/index');
 
 const { generateAuthToken, requireAuthentication } = require('../../lib/auth');
+const validation = require('../../lib/validation');
 
 function validateUserObject(user, mongoDB) {
 
@@ -164,7 +170,7 @@ router.get('/:userID', requireAuthentication, (req, res, next) => {
     }
 });
 
-router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
+/* router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
     const mysqlPool = req.app.locals.mysqlPool;
     if (req.user !== req.params.userID) {
         res.status(403).json({
@@ -172,7 +178,7 @@ router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
         });
     } else {
         const userID = parseInt(req.params.userID);
-        mysqlPool.query('SELECT * FROM playlists WHERE userID = ?', [userID])
+        mysqlPool.query('SELECT * FROM playlists WHERE userid = ?', [userID])
             .then((playlists) => {
                 if (playlists) {
                     res.status(200).json({ playlists: playlists });
@@ -186,9 +192,133 @@ router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
                 });
             });
     }
+}); */
+/*
+ * Route to list all of a user's playlists.
+ */
+router.get('/:userID/playlists', requireAuthentication, (req, res) => {
+	const mysqlPool = req.app.locals.mysqlPool;
+	if (req.user !== req.params.userID) {
+		res.status(403).json({
+			error: "Unauthorized to access that resource"
+		});
+	} else {
+		const userID = parseInt(req.params.userID);
+		getPlaylistsByOwnerID(userID, mysqlPool)
+			.then((playlists) => {
+				if (playlists) {
+					res.status(200).json({ playlists: playlists });
+				} else {
+					next();
+				}
+			})
+			.catch((err) => {
+				res.status(500).json({
+					error: "Unable to fetch playlists.  Please try again later."
+				});
+			});
+	}
 });
 
+/*
+ * Route to create a new playlist.
+ */
+router.post('/:userID/playlists', requireAuthentication, (req, res) => {
+  	const mysqlPool = req.app.locals.mysqlPool;
+	if (req.user !== req.params.userID) {
+		res.status(403).json({
+			error: "Unauthorized to access that resource"
+		});
+	} else {
+		req.body.userid = req.user;
+		console.log(req.body);
+		if (validation.validateAgainstSchema(req.body, playlistSchema)) {
+			insertNewPlaylist(req.body, mysqlPool)
+				.then((id) => {
+					res.status(201).json({
+						id: id,
+					links: {
+						playlist: `/playlists/${id}`
+					}
+				});
+			})
+			.catch((err) => {
+				res.status(500).json({
+					error: "Error inserting playlist into DB.  Please try again later."
+				});
+			});
+		} else {
+			res.status(400).json({
+				error: "Request body is not a valid playlist object."
+			});
+		}
+	}
+});
 
+/*
+ * Route to update a playlist.
+ */
+router.put('/:userID/:playlistID', requireAuthentication, (req, res) => {
+  	const mysqlPool = req.app.locals.mysqlPool;
+	if (req.user !== req.params.userID) {
+		res.status(403).json({
+			error: "Unauthorized to access that resource"
+		});
+	} else {
+		const playlistID = parseInt(req.params.playlistID);
+		req.body.userid = req.user;
+		if (validation.validateAgainstSchema(req.body, playlistSchema)) {
+			replacePlaylistByID(playlistID, req.body, mysqlPool)
+				.then((updateSuccessful) => {
+					if (updateSuccessful) {
+						res.status(200).json({
+							links: {
+								playlists: `/playlists/${playlistID}`
+							}
+						});
+					} else {
+						next();
+					}
+				})
+				.catch((err) => {
+					console.log(err);
+					res.status(500).json({
+						error: "Unable to update specified playlist.  Please try again later."
+					});
+				});
+		} else {
+			res.status(400).json({
+				error: "Request body is not a valid playlist object"
+			});
+		}
+	}
+});
 
+/*
+ * Route to delete a playlist.
+ */
+router.delete('/:userID/:playlistID', requireAuthentication, (req, res) => {
+  	const mysqlPool = req.app.locals.mysqlPool;
+	if (req.user !== req.params.userID) {
+		res.status(403).json({
+			error: "Unauthorized to access that resource"
+		});
+	} else {
+		const playlistID = parseInt(req.params.playlistID);
+		deletePlaylistByID(playlistID, mysqlPool)
+			.then((deleteSuccessful) => {
+				if (deleteSuccessful) {
+					res.status(204).end();
+				} else {
+					next();
+				}
+			})
+			.catch((err) => {
+				res.status(500).json({
+					error: "Unable to delete playlist.  Please try again later."
+				});
+			});
+	}
+});
 
 exports.router = router;
