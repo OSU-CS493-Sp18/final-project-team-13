@@ -7,18 +7,36 @@ services:
     ports:
       - 8000:8000
     environment:
-      MYSQL_DATABASE: 'musicdb'
+      MONGO_DATABASE: ${MONGO_DATABASE}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_HOST: mongo
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
-
+    links:
+      - mongo
+      - mysql
+  mongo:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db/
+      - ./db-init/:/docker-entrypoint-initdb.d/
   mysql:
     image: mysql:5
     restart: always
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./db-init:/docker-entrypoint-initdb.d
+      - ./db-init/:/docker-entrypoint-initdb.d
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -28,3 +46,5 @@ services:
 volumes:
   mysql-data:
     name: proj-mysql-data
+  mongo-data:
+    name: proj-mongo-data
