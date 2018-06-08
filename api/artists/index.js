@@ -1,48 +1,47 @@
 const router = require('express').Router();
 const validation = require('../../lib/validation');
 
-const songSchema = {
-  title: { required: true },
-  artist: { required: true },
-  album: { required: true },
+const artistSchema = {
+  name: { required: true },
+  genre: { required: true },
 };
 
-// ROUTE: /songs
+// ROUTE: /artists
 // PARAMS:
 // QUERIES: 
 router.get('/', (req, res) => {
     const mysqlPool = req.app.locals.mysqlPool;
-    getSongsCount(mysqlPool)
+    getArtistsCount(mysqlPool)
         .then((count) => {
-            return getSongsPage(parseInt(req.query.page) || 1, count, mysqlPool);
+            return getArtistsPage(parseInt(req.query.page) || 1, count, mysqlPool);
         })
-        .then((songsPageInfo) => {
+        .then((artistsPageInfo) => {
             /*
             * Generate HATEOAS links for surrounding pages and then send response.
             */
-            songsPageInfo.links = {};
-            let { links, pageNumber, totalPages } = songsPageInfo;
+            artistsPageInfo.links = {};
+            let { links, pageNumber, totalPages } = artistsPageInfo;
             if (pageNumber < totalPages) {
-                links.nextPage = `/songs?page=${pageNumber + 1}`;
-                links.lastPage = `/songs?page=${totalPages}`;
+                links.nextPage = `/artists?page=${pageNumber + 1}`;
+                links.lastPage = `/artists?page=${totalPages}`;
             }
             if (pageNumber > 1) {
-                links.prevPage = `/songs?page=${pageNumber - 1}`;
-                links.firstPage = '/songs?page=1';
+                links.prevPage = `/artists?page=${pageNumber - 1}`;
+                links.firstPage = '/artists?page=1';
             }
-            res.status(200).json(songsPageInfo);
+            res.status(200).json(artistsPageInfo);
         })
         .catch((err) => {
             console.log(err);
             res.status(500).json({
-                error: "Error fetching songs list.  Please try again later."
+                error: "Error fetching artists list.  Please try again later."
         });
     });
 });
 
-function getSongsCount(mysqlPool) {
+function getArtistsCount(mysqlPool) {
     return new Promise((resolve, reject) => {
-      mysqlPool.query('SELECT COUNT(*) AS count FROM songs', function (err, results) {
+      mysqlPool.query('SELECT COUNT(*) AS count FROM artists', function (err, results) {
         if (err) {
           reject(err);
         } else {
@@ -52,7 +51,7 @@ function getSongsCount(mysqlPool) {
     });
 }
 
-function getSongsPage(page, totalCount, mysqlPool) {
+function getArtistsPage(page, totalCount, mysqlPool) {
     return new Promise((resolve, reject) => {
       /*
        * Compute last page number and make sure page is within allowed bounds.
@@ -65,14 +64,14 @@ function getSongsPage(page, totalCount, mysqlPool) {
       const offset = (page - 1) * numPerPage;
 
       mysqlPool.query(
-        'SELECT * FROM songs ORDER BY id LIMIT ?,?',
+        'SELECT artists.id, name, genres.genre FROM artists JOIN genres ON artists.genre = genres.id ORDER BY id LIMIT ?,?',
         [offset, numPerPage],
         function (err, results) {
           if (err) {
             reject(err);
           } else {
             resolve({
-              songs: results,
+              artists: results,
               pageNumber: page,
               totalPages: lastPage,
               pageSize: numPerPage,
@@ -84,41 +83,41 @@ function getSongsPage(page, totalCount, mysqlPool) {
     });
 }
 
-// ROUTE: /songs
+// ROUTE: /artists
 // PARAMS:
 // QUERIES: 
 router.post('/', (req, res) => {
   const mysqlPool = req.app.locals.mysqlPool;
-  if (validation.validateAgainstSchema(req.body, songSchema)) {
-    insertNewSong(req.body, mysqlPool)
+  if (validation.validateAgainstSchema(req.body, artistSchema)) {
+    insertNewArtist(req.body, mysqlPool)
       .then((id) => {
         res.status(201).json({
           id: id,
           links: {
-            song: `/songs/${id}`
+            artist: `/artists/${id}`
           }
         });
       })
       .catch((err) => {
         console.log(err);
         res.status(500).json({
-          error: "Error inserting song into DB.  Please try again later."
+          error: "Error inserting artist into DB.  Please try again later."
         });
       });
   } else {
     res.status(400).json({
-      error: "Request body is not a valid song object."
+      error: "Request body is not a valid artist object."
     });
   }
 });
 
-function insertNewSong(song, mysqlPool) {
+function insertNewArtist(artist, mysqlPool) {
   return new Promise((resolve, reject) => {
-    songVals = validation.extractValidFields(song, songSchema);
-    song.id = null;
+    artistVals = validation.extractValidFields(artist, artistSchema);
+    artist.id = null;
     mysqlPool.query(
-      'INSERT INTO songs SET ?',
-      songVals,
+      'INSERT INTO artists SET ?',
+      artistVals,
       function (err, result) {
         if (err) {
           reject(err);
@@ -130,30 +129,30 @@ function insertNewSong(song, mysqlPool) {
   });
 }
 
-// ROUTE: /songs/songID
+// ROUTE: /artists/artistID
 // PARAMS:
 // QUERIES: 
-router.get('/:songID', (req, res) => {
+router.get('/:artistID', (req, res) => {
   const mysqlPool = req.app.locals.mysqlPool;
-  const songID = parseInt(req.params.songID);
-  getSongByID(songID, mysqlPool)
-    .then((song) => {
-      if (song) {
-        res.status(200).json(song);
+  const artistID = parseInt(req.params.artistID);
+  getArtistByID(artistID, mysqlPool)
+    .then((artist) => {
+      if (artist) {
+        res.status(200).json(artist);
       } else {
         next();
       }
     })
     .catch((err) => {
       res.status(500).json({
-        error: "Unable to fetch song.  Please try again later."
+        error: "Unable to fetch artist.  Please try again later."
       });
     });
 });
 
-function getSongByID(songID, mysqlPool) {
+function getArtistByID(artistID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM songs WHERE id = ?', [songID], function (err, results) {
+    mysqlPool.query('SELECT artists.id, name, genres.genre FROM artists JOIN genres ON artists.genre = genres.id WHERE artists.id = ?', [artistID], function (err, results) {
       if (err) {
         reject(err);
       } else {
@@ -163,19 +162,19 @@ function getSongByID(songID, mysqlPool) {
   })
 }
 
-// ROUTE: /songs/songID
+// ROUTE: /artists/artistID
 // PARAMS:
 // QUERIES: 
-router.put('/:songID', function (req, res, next) {
+router.put('/:artistID', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
-  const songID = parseInt(req.params.songID);
-  if (validation.validateAgainstSchema(req.body, songSchema)) {
-    replaceSongByID(songID, req.body, mysqlPool)
+  const artistID = parseInt(req.params.artistID);
+  if (validation.validateAgainstSchema(req.body, artistSchema)) {
+    replaceArtistByID(artistID, req.body, mysqlPool)
       .then((updateSuccessful) => {
         if (updateSuccessful) {
           res.status(200).json({
             links: {
-              song: `/songs/${songID}`
+              artist: `/artists/${artistID}`
             }
           });
         } else {
@@ -185,20 +184,20 @@ router.put('/:songID', function (req, res, next) {
       .catch((err) => {
         console.log(err);
         res.status(500).json({
-          error: "Unable to update specified song.  Please try again later."
+          error: "Unable to update specified artist.  Please try again later."
         });
       });
   } else {
     res.status(400).json({
-      error: "Request body is not a valid song object"
+      error: "Request body is not a valid artist object"
     });
   }
 });
 
-function replaceSongByID(songID, song, mysqlPool) {
+function replaceArtistByID(artistID, artist, mysqlPool) {
   return new Promise((resolve, reject) => {
-    song = validation.extractValidFields(song, songSchema);
-    mysqlPool.query('UPDATE songs SET ? WHERE id = ?', [song, songID], function (err, result) {
+    artist = validation.extractValidFields(artist, artistSchema);
+    mysqlPool.query('UPDATE artists SET ? WHERE id = ?', [artist, artistID], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -208,13 +207,13 @@ function replaceSongByID(songID, song, mysqlPool) {
   });
 }
 
-// ROUTE: /songs/songID
+// ROUTE: /artists/artistID
 // PARAMS:
 // QUERIES: 
-router.delete('/:songID', function (req, res, next) {
+router.delete('/:artistID', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
-  const songID = parseInt(req.params.songID);
-  deleteSongByID(songID, mysqlPool)
+  const artistID = parseInt(req.params.artistID);
+  deleteArtistByID(artistID, mysqlPool)
     .then((deleteSuccessful) => {
       if (deleteSuccessful) {
         res.status(204).end();
@@ -224,14 +223,14 @@ router.delete('/:songID', function (req, res, next) {
     })
     .catch((err) => {
       res.status(500).json({
-        error: "Unable to delete song.  Please try again later."
+        error: "Unable to delete artist.  Please try again later."
       });
     });
 });
 
-function deleteSongByID(songID, mysqlPool) {
+function deleteArtistByID(artistID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('DELETE FROM songs WHERE id = ?', [songID], function (err, result) {
+    mysqlPool.query('DELETE FROM artists WHERE id = ?', [artistID], function (err, result) {
       if (err) {
         reject(err);
       } else {

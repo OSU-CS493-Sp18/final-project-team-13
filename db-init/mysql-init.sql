@@ -20,7 +20,9 @@ DROP TABLE IF EXISTS `artists`;
 CREATE TABLE `artists` (
   `id` mediumint(9) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
+  `genre` mediumint(9),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`genre`) REFERENCES genres(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `albums`;
@@ -44,7 +46,7 @@ CREATE TABLE `songs` (
 
 INSERT INTO `genres` VALUES (1,'Pop'),(2,'Hard Rock');
 
-INSERT INTO `artists` VALUES (1,'ABBA'),(2,'Aerosmith'),(3,'Backstreet Boys'),(4,'Black Eyed Peas'),(5,'Bon Jovi');
+INSERT INTO `artists` VALUES (1,'ABBA', 1),(2,'Aerosmith', 2),(3,'Backstreet Boys', 1),(4,'Black Eyed Peas', 1),(5,'Bon Jovi', 2);
 
 INSERT INTO `albums` VALUES (1,'Number Ones','ABBA','Pop',2006),(2,'Toys in the Attic','Aerosmith','Hard Rock',1975),(3,'Millennium','Backstreet Boys','Pop',1999),(4,'The E.N.D.','Black Eyed Peas','Pop',2009),(5,'Slippery When Wet','Bon Jovi','Hard Rock',1986);
 
