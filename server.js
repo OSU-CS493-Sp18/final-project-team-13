@@ -2,16 +2,13 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
-const redis = require('redis');
-
 const api = require('./api');
-
 const app = express();
 const port = process.env.PORT || 8000;
 
 const mysqlHost = process.env.MYSQL_HOST;
 const mysqlPort = process.env.MYSQL_PORT || '3306';
-const mysqlDBName = process.env.MYSQL_DATABASE;
+const mysqlDBName = 'musicdb';
 const mysqlUser = process.env.MYSQL_USER;
 const mysqlPassword = process.env.MYSQL_PASSWORD;
 

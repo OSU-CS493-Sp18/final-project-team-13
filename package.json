@@ -16,7 +16,7 @@
     "genre",
     "organize"
   ],
-  "author": "DJ Shamblin",
+  "author": "Team 13",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/OSU-CS493-Sp18/final-project-team-13/issues"
@@ -26,9 +26,11 @@
     "nodemon": "^1.17.5"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.16.3",
+    "jsonwebtoken": "^8.2.2",
+    "mongodb": "^3.0.10",
     "morgan": "^1.9.0",
-    "mysql": "^2.15.0",
-    "redis": "^2.8.0"
+    "mysql": "^2.15.0"
   }
 }
