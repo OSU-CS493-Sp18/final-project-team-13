@@ -6,6 +6,8 @@ const api = require('./api');
 const app = express();
 const port = process.env.PORT || 8000;
 
+const { mongoConnect } = require('./lib/db')
+
 const mysqlHost = process.env.MYSQL_HOST;
 const mysqlPort = process.env.MYSQL_PORT || '3306';
 const mysqlDBName = 'musicdb';
@@ -42,4 +44,13 @@ app.use('*', function(req, res, next){
     });
 })
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+mongoConnect()
+	.then((client) => {
+		app.locals.mongoDB = client;
+	})
+	.then(() => {
+		app.listen(port, () => console.log(`Server listening on port ${port}`));	
+
+	})
+	.catch((err) => console.log(err));
+
