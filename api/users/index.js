@@ -165,14 +165,14 @@ router.get('/:userID', requireAuthentication, (req, res, next) => {
 });
 
 router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
-
+    const mysqlPool = req.app.locals.mysqlPool;
     if (req.user !== req.params.userID) {
         res.status(403).json({
             error: "Unauthorized to access that resource."
         });
     } else {
         const userID = parseInt(req.params.userID);
-        getPlaylistsByOwnerID(userID, mysqlPool)
+        mysqlPool.query('SELECT * FROM playlists WHERE userID = ?', [userID])
             .then((playlists) => {
                 if (playlists) {
                     res.status(200).json({ playlists: playlists });
