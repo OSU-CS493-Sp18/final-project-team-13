@@ -150,7 +150,7 @@ function generateUserIDQuery(userID) {
   if (ObjectId.isValid(userID)) {
     return { _id: new ObjectId(userID) };
   } else {
-    return { userid: userID };
+    return { userID: userID };
   }
 }
 
