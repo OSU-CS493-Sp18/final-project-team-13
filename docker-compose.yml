@@ -7,7 +7,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      MYSQL_DATABASE: 'musicdb'
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_HOST: mysql
@@ -30,7 +30,7 @@ services:
       - mysql-data:/var/lib/mysql
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-      MYSQL_DATABASE: 'musicdb'
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:

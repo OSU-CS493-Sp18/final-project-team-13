@@ -10,7 +10,7 @@ const { mongoConnect } = require('./lib/db')
 
 const mysqlHost = process.env.MYSQL_HOST;
 const mysqlPort = process.env.MYSQL_PORT || '3306';
-const mysqlDBName = 'musicdb';
+const mysqlDBName = process.env.MYSQL_DATABASE;
 const mysqlUser = process.env.MYSQL_USER;
 const mysqlPassword = process.env.MYSQL_PASSWORD;
 
@@ -27,7 +27,6 @@ app.locals.mysqlPool = mysql.createPool({
 /*
  * Morgan is a popular logger.
  */
-app.use(morgan('dev'));
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
