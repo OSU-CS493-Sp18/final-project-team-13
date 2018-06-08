@@ -64,8 +64,8 @@ function getArtistsPage(page, totalCount, mysqlPool) {
       const offset = (page - 1) * numPerPage;
 
       mysqlPool.query(
-        'SELECT * FROM artists ORDER BY id LIMIT ?,?',
-        [offest, numPerPage],
+        'SELECT artists.id, name, genres.genre FROM artists JOIN genres ON artists.genre = genres.id ORDER BY id LIMIT ?,?',
+        [offset, numPerPage],
         function (err, results) {
           if (err) {
             reject(err);
@@ -152,7 +152,7 @@ router.get('/:artistID', (req, res) => {
 
 function getArtistByID(artistID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM artists WHERE id = ?', [artistID], function (err, results) {
+    mysqlPool.query('SELECT artists.id, name, genres.genre FROM artists JOIN genres ON artists.genre = genres.id WHERE artists.id = ?', [artistID], function (err, results) {
       if (err) {
         reject(err);
       } else {

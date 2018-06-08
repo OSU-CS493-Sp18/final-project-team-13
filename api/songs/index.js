@@ -66,7 +66,7 @@ function getSongsPage(page, totalCount, mysqlPool) {
 
       mysqlPool.query(
         'SELECT * FROM songs ORDER BY id LIMIT ?,?',
-        [offest, numPerPage],
+        [offset, numPerPage],
         function (err, results) {
           if (err) {
             reject(err);
