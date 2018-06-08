@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bcrypt =  require('bcryptjs');
 
-const { generateAuthToken, requireAuthentication } = require('../lib/auth');
+const { generateAuthToken, requireAuthentication } = require('../../lib/auth');
 
 // ROUTE: /users
 // PARAMS:

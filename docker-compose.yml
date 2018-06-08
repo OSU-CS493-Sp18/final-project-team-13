@@ -4,53 +4,30 @@ services:
     build: .
     image: music-api
     restart: always
-    networks:
-      - mysql-net
-      - redis-net
     ports:
       - 8000:8000
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: 'musicdb'
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
-      REDIS_HOST: redis
-    links:
-      - mysql
-      - redis
+
   mysql:
-    image: mysql:5
+    build:
+      context: .
+      dockerfile: Dockerfile-mysql
     restart: always
     volumes:
-      - mysql-proj-data:/var/lib/mysql
-      - ./db-init/:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_HOST: 172.19.0.4
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: 'musicdb'
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    networks:
-      - mysql-net
-  redis:
-    image: redis:latest
-    restart: always
-    hostname: redis
     ports:
-      - "6379:6379"
-    volumes:
-      - redis-proj-data:/data
-    networks:
-      - redis-net
-networks:
-  mysql-net:
-    driver: bridge
-  redis-net:
-    driver: bridge
+      - 3306:3306
+
 volumes:
-  mysql-proj-data:
-    external: true
-  redis-proj-data:
-    external: true
-  
+  mysql-data:
+    name: proj-mysql-data
