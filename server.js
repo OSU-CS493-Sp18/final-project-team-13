@@ -32,7 +32,7 @@ app.use(express.static('public'));
 
 app.use(morgan('dev'));
 
-app.locals.mysqlPool = require('./lib/db').mysqlPool;
+//app.locals.mysqlPool = require('./lib/db').mysqlPool;
 
 app.use('/', api);
 

@@ -1,8 +1,7 @@
 const router = require('express').Router();
-const validation = require('../lib/validation');
+const validation = require('../../lib/validation');
 
 const songSchema = {
-  ownerid: { required: true },
   title: { required: true },
   artist: { required: true },
   album: { required: true },
@@ -64,10 +63,10 @@ function getSongsPage(page, totalCount, mysqlPool) {
       page = page < 1 ? 1 : page;
       page = page > lastPage ? lastPage : page;
       const offset = (page - 1) * numPerPage;
-  
+
       mysqlPool.query(
         'SELECT * FROM songs ORDER BY id LIMIT ?,?',
-        [ offset, numPerPage ],
+        [offest, numPerPage],
         function (err, results) {
           if (err) {
             reject(err);
@@ -96,11 +95,12 @@ router.post('/', (req, res) => {
         res.status(201).json({
           id: id,
           links: {
-            song: `/song/${id}`
+            song: `/songs/${id}`
           }
         });
       })
       .catch((err) => {
+        console.log(err);
         res.status(500).json({
           error: "Error inserting song into DB.  Please try again later."
         });
@@ -114,11 +114,11 @@ router.post('/', (req, res) => {
 
 function insertNewSong(song, mysqlPool) {
   return new Promise((resolve, reject) => {
-    song = validation.extractValidFields(song, songSchema);
+    songVals = validation.extractValidFields(song, songSchema);
     song.id = null;
     mysqlPool.query(
       'INSERT INTO songs SET ?',
-      song,
+      songVals,
       function (err, result) {
         if (err) {
           reject(err);
@@ -153,7 +153,7 @@ router.get('/:songID', (req, res) => {
 
 function getSongByID(songID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM songs WHERE id = ?', [ songID ], function (err, results) {
+    mysqlPool.query('SELECT * FROM songs WHERE id = ?', [songID], function (err, results) {
       if (err) {
         reject(err);
       } else {
@@ -198,7 +198,7 @@ router.put('/:songID', function (req, res, next) {
 function replaceSongByID(songID, song, mysqlPool) {
   return new Promise((resolve, reject) => {
     song = validation.extractValidFields(song, songSchema);
-    mysqlPool.query('UPDATE songs SET ? WHERE id = ?', [ song, songID ], function (err, result) {
+    mysqlPool.query('UPDATE songs SET ? WHERE id = ?', [song, songID], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -231,7 +231,7 @@ router.delete('/:songID', function (req, res, next) {
 
 function deleteSongByID(songID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('DELETE FROM songs WHERE id = ?', [ songID ], function (err, result) {
+    mysqlPool.query('DELETE FROM songs WHERE id = ?', [songID], function (err, result) {
       if (err) {
         reject(err);
       } else {
