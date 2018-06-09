@@ -9,8 +9,7 @@ function validateUserObject(user, mongoDB) {
         .then((result) => {
             return result ? false :
                 Promise.resolve(user && user.userID && user.name && user.password)
-        }
-        )
+        })
         .catch((err) => console.log(err));
 };
 
@@ -224,7 +223,7 @@ router.delete('/:userID', requireAuthentication, (req, res, next) => {
         });
     } else {
         deleteUserByID(req.params.userID, mongoDB)
-            .then((deleteSuccesful) => {3
+            .then((deleteSuccesful) => {
                 if (deleteSuccesful.ok) {
                     res.status(204).end();
                 } else {
