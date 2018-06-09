@@ -2,6 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 
 const { generateAuthToken, requireAuthentication } = require('../../lib/auth');
+const validation = require('../../lib/validation');
 
 function validateUserObject(user, mongoDB) {
 
@@ -187,6 +188,7 @@ router.get('/:userID', requireAuthentication, (req, res, next) => {
     }
 });
 
+
 router.put('/:userID', requireAuthentication, (req, res, next) => {
     const mongoDB = req.app.locals.mongoDB;
     if (req.user !== req.params.userID) {
@@ -237,6 +239,7 @@ router.delete('/:userID', requireAuthentication, (req, res, next) => {
             });
     }
 });
+
 
 
 exports.router = router;

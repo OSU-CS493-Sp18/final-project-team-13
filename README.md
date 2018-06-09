@@ -20,9 +20,9 @@ genre. Artists will possess description information as well as links to their in
 - [ ] /playlists/{id} -- GET, PUT, DELETE -- Show, update or remove a playlist
 
 ### genres
-- [ ] /genres -- GET, POST -- List all genres or add a genre (for admins)
+- [ ] /genres -- GET, POST, PUT, DELETE -- List all genres, add, update, or remove a genre
 - [ ] /genres/{id}/artists -- GET -- List all artists in this genre
-- [ ] /genres/{id}/songs -- GET -- List all songs in this genre
+- [ ] /genres/{id}/albums -- GET -- List all albums in this genre
 
 ### artists
 - [ ] /artists -- GET, POST -- List all artists or add an artist

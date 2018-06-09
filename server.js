@@ -6,13 +6,13 @@ const api = require('./api');
 const app = express();
 const port = process.env.PORT || 8000;
 
-const MongoClient = require('mongodb').MongoClient;
-const mongoHost = process.env.MONGO_HOST
-const mongoDatabase = process.env.MONGO_DATABASE
-const mongoUser = process.env.MONGO_USERNAME
-const mongoPassword = process.env.MONGO_PASSWORD
-const mongoPort = process.env.MONGO_PORT || 27017;
-const mongoURL = `mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}/${mongoDatabase}`;
+const { mongoConnect } = require('./lib/db')
+
+const mysqlHost = process.env.MYSQL_HOST;
+const mysqlPort = process.env.MYSQL_PORT || '3306';
+const mysqlDBName = process.env.MYSQL_DATABASE;
+const mysqlUser = process.env.MYSQL_USER;
+const mysqlPassword = process.env.MYSQL_PASSWORD;
 
 const maxMySQLConnections = 10;
 app.locals.mysqlPool = mysql.createPool({
@@ -24,12 +24,15 @@ app.locals.mysqlPool = mysql.createPool({
 	password: mysqlPassword
 });
 
-app.use(morgan('dev'));
+
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
 app.use(morgan('dev'));
+
+
+//app.locals.mysqlPool = require('./lib/db').mysqlPool;
 
 app.use('/', api);
 
