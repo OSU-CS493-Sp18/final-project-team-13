@@ -143,6 +143,28 @@ function getUserByID(userID, mongoDB, includePassword) {
         });
 }
 
+function updateUserByID(userID, inserts, mongoDB, includePassword) {
+    const projection = includePassword ? {} : { password: 0 };
+    return mongoDB.collection('users')
+        .update(
+            { userID: userID },
+            { $set: inserts }
+        )
+        .then((result) => {
+            return Promise.resolve(result.result);
+        });
+}
+
+function deleteUserByID(userID, mongoDB) {
+    return mongoDB.collection('users')
+        .deleteOne({
+            userID: userID
+        })
+        .then((result) => {
+            return Promise.resolve(result.result);
+        });
+}
+
 router.get('/:userID', requireAuthentication, (req, res, next) => {
     const mongoDB = req.app.locals.mongoDB;
     if (req.user !== req.params.userID) {
@@ -166,31 +188,56 @@ router.get('/:userID', requireAuthentication, (req, res, next) => {
     }
 });
 
-router.get('/:userID/playlists', requireAuthentication, (req, res) =>  {
-    const mysqlPool = req.app.locals.mysqlPool;
+router.put('/:userID', requireAuthentication, (req, res, next) => {
+    const mongoDB = req.app.locals.mongoDB;
     if (req.user !== req.params.userID) {
         res.status(403).json({
             error: "Unauthorized to access that resource."
         });
     } else {
-        const userID = parseInt(req.params.userID);
-        mysqlPool.query('SELECT * FROM playlists WHERE userID = ?', [userID])
-            .then((playlists) => {
-                if (playlists) {
-                    res.status(200).json({ playlists: playlists });
+        const inserts = req.body;
+        updateUserByID(req.params.userID, inserts,mongoDB)
+            .then((updateSuccessful) => {
+                if (updateSuccessful.ok) {
+                    res.status(200).json({
+                        links: {
+                            user: `/users/${req.params.userID}`
+                        }
+                    });
                 } else {
                     next();
                 }
             })
             .catch((err) => {
                 res.status(500).json({
-                    error: "Unable to fetch playlists.  Please try again later."
+                    error: "Unable to update user."
                 });
             });
     }
 });
 
-
+router.delete('/:userID', requireAuthentication, (req, res, next) => {
+    const mongoDB = req.app.locals.mongoDB;
+    if (req.user !== req.params.userID) {
+        res.status(403).json({
+            error: "Unauthorized to access that resource."
+        });
+    } else {
+        deleteUserByID(req.params.userID, mongoDB)
+            .then((deleteSuccesful) => {3
+                if (deleteSuccesful.ok) {
+                    res.status(204).end();
+                } else {
+                    next();
+                }
+            })
+            .catch((err) => {
+                res.status(500).json({
+                    error: "Unable to delete user."
+                });
+            });
+    }
+});
 
 
 exports.router = router;
