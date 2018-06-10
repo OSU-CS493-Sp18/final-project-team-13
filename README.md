@@ -11,25 +11,25 @@ genre. Artists will possess description information as well as links to their in
 # Endpoints
 
 ### users
-- [ ] /users -- GET, POST -- List all users or add a new user
-- [ ] /users/{id} -- GET, PUT, DELETE -- Show a user’s info and playlists, modify or remove that user
-
+- [ ] /users -- GET, POST -- List all users, add a new user
+- [ ] /users/{id} -- GET, PUT, DELETE -- Show a user's info and playlists, modify, or remove that user
 
 ### playlists
-- [ ] /playlists -- POST -- Add a playlist linked to a user
-- [ ] /playlists/{id} -- GET, PUT, DELETE -- Show, update or remove a playlist
+- [ ] /playlists -- GET, POST -- Show all playlists, add a playlist linked to a user
+- [ ] /playlists/{id} -- GET, PUT, DELETE -- Show, update, or remove a playlist
 
 ### genres
-- [ ] /genres -- GET, POST, PUT, DELETE -- List all genres, add, update, or remove a genre
+- [ ] /genres -- GET, POST -- List all genres, add a genre
+- [ ] /genres/{id} -- PUT, DELETE -- Update or remove a genre
 - [ ] /genres/{id}/artists -- GET -- List all artists in this genre
 - [ ] /genres/{id}/albums -- GET -- List all albums in this genre
 
 ### artists
-- [ ] /artists -- GET, POST -- List all artists or add an artist
-- [ ] /artists/{id} -- GET, PUT, DELETE -- Show, update or remove an artist. Shows artists info, songs, genres, and streaming services
+- [ ] /artists -- GET, POST -- List all artists, add an artist
+- [ ] /artists/{id} -- GET, PUT, DELETE -- Show, update, or remove an artist
 
 ### songs
-- [ ] /songs -- GET, POST -- List all songs or add an song
-- [ ] /songs/{id} -- GET, PUT, DELETE -- Show, update or remove a song. Shows song genres, and streaming servicesMost top
+- [ ] /songs -- GET, POST -- List all songs, add an song
+- [ ] /songs/{id} -- GET, PUT, DELETE -- Show, update, or remove a song
 
 
