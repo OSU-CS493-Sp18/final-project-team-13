@@ -24,14 +24,13 @@ app.locals.mysqlPool = mysql.createPool({
 	password: mysqlPassword
 });
 
-/*
- * Morgan is a popular logger.
- */
+
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
 app.use(morgan('dev'));
+
 
 //app.locals.mysqlPool = require('./lib/db').mysqlPool;
 
@@ -43,13 +42,13 @@ app.use('*', function(req, res, next){
     });
 })
 
-mongoConnect()
-	.then((client) => {
-		app.locals.mongoDB = client;
-	})
-	.then(() => {
-		app.listen(port, () => console.log(`Server listening on port ${port}`));	
+MongoClient.connect(mongoURL, {useNewUrlParser: true}, function (err, client) {
+	if (!err) {
+		app.locals.mongoDB = client.db(mongoDatabase);
+		app.listen(port, function () {
+			console.log("== Server is running on port", port);
+		});
+	}
+})
 
-	})
-	.catch((err) => console.log(err));
 
