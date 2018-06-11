@@ -29,7 +29,9 @@ genre. Artists will possess description information as well as links to their in
 - [ ] /artists/{id} -- GET, PUT, DELETE -- Show, update, or remove an artist
 
 ### songs
-- [ ] /songs -- GET, POST -- List all songs, add an song
+- [ ] /songs -- GET, POST -- List all songs, add a song
 - [ ] /songs/{id} -- GET, PUT, DELETE -- Show, update, or remove a song
 
-
+### albums
+- [ ] /albums -- GET, POST -- List all albums, add an album
+- [ ] /albums/{id} -- GET, PUT, DELETE -- Show, update, or remove an album
