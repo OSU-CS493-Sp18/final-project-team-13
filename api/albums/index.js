@@ -6,7 +6,7 @@ const albumSchema = {
   artist: { required: true },
   genre: { required: true },
   year: { required: true },
-  streaming_sites: { required: false}
+  streaming_sites: { required: true}
 };
 
 // ROUTE: /albums
@@ -96,13 +96,22 @@ function getAlbumsPage(page, totalCount, mysqlPool) {
 // QUERIES: 
 router.post('/', (req, res) => {
   const mysqlPool = req.app.locals.mysqlPool;
+  var streaming_sites = req.body.streaming_sites;
+  var albumId;
   if (validation.validateAgainstSchema(req.body, albumSchema)) {
     insertNewAlbum(req.body, mysqlPool)
       .then((id) => {
+        albumId = id;
+        for(var i = 0; i < streaming_sites.length; i++){
+          insertNewAlbumStreams(id, streaming_sites[i], mysqlPool);
+        }
+        
+      })
+      .then(() => {
         res.status(201).json({
-          id: id,
+          id: albumId,
           links: {
-            album: `/albums/${id}`
+            album: `/albums/${albumId}`
           }
         });
       })
@@ -121,7 +130,6 @@ router.post('/', (req, res) => {
 
 function insertNewAlbum(album, mysqlPool) {
   return new Promise((resolve, reject) => {
-    sites = album.streaming_sites; //Add to table streaming_sites_albums
     delete album.streaming_sites;
     album = validation.extractValidFields(album, albumSchema);
     album.id = null;
@@ -139,6 +147,22 @@ function insertNewAlbum(album, mysqlPool) {
   });
 }
 
+function insertNewAlbumStreams(album_id, site_id, mysqlPool) {
+    mysqlPool.query(
+      'INSERT INTO streaming_sites_albums (site_id, album_id) VALUES (?,?)',
+      [site_id, album_id],
+      function (err, result) {
+        if (err) {
+          return(err);
+        } else {
+          console.log("site", site_id);
+          console.log(result);
+          return(album_id);
+        }
+      }
+    );
+}
+
 // ROUTE: /albums/albumID
 // PARAMS:
 // QUERIES: 
@@ -154,6 +178,7 @@ router.get('/:albumID', (req, res) => {
       }
     })
     .catch((err) => {
+      console.log(err);
       res.status(500).json({
         error: "Unable to fetch album.  Please try again later."
       });
@@ -163,10 +188,6 @@ router.get('/:albumID', (req, res) => {
 function getAlbumByID(albumID, mysqlPool) {
 
   return new Promise((resolve, reject) => {
-    sites = album.streaming_sites; //Add to table streaming_sites_albums
-    delete album.streaming_sites;
-    album = validation.extractValidFields(album, albumSchema);
-    album.id = null;
     mysqlPool.query('SELECT albums.id, title, artist, year, genres.genre, streaming_sites.name AS streaming_site \
      FROM albums \
      JOIN genres ON albums.genre = genres.id \
@@ -188,18 +209,26 @@ function getAlbumByID(albumID, mysqlPool) {
 router.put('/:albumID', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   const albumID = parseInt(req.params.albumID);
+  var streaming_sites = req.body.streaming_sites;
   if (validation.validateAgainstSchema(req.body, albumSchema)) {
     replaceAlbumByID(albumID, req.body, mysqlPool)
       .then((updateSuccessful) => {
         if (updateSuccessful) {
+          removeAlbumStreamByID(albumID, mysqlPool);
+          for(var i = 0; i < streaming_sites.length; i++){
+            insertNewAlbumStreams(albumID, streaming_sites[i], mysqlPool);
+          }
+        }
+        else {
+          next();
+        }
+      })
+      .then(() => {
           res.status(200).json({
             links: {
               album: `/albums/${albumID}`
             }
           });
-        } else {
-          next();
-        }
       })
       .catch((err) => {
         console.log(err);
@@ -217,6 +246,7 @@ router.put('/:albumID', function (req, res, next) {
 function replaceAlbumByID(albumID, album, mysqlPool) {
   return new Promise((resolve, reject) => {
     album = validation.extractValidFields(album, albumSchema);
+    delete album.streaming_sites;
     mysqlPool.query('UPDATE albums SET ? WHERE id = ?', [album, albumID], function (err, result) {
       if (err) {
         reject(err);
@@ -225,6 +255,21 @@ function replaceAlbumByID(albumID, album, mysqlPool) {
       }
     });
   });
+}
+
+function removeAlbumStreamByID(albumId, mysqlPool) {
+    mysqlPool.query(
+      'DELETE FROM streaming_sites_albums WHERE album_id = ?',
+      albumId,
+      function (err, result) {
+        if (err) {
+          console.log(err);
+          return(err);
+        } else {
+          return(result.affectedRows > 0);
+        }
+      }
+    );
 }
 
 // ROUTE: /albums/albumID
