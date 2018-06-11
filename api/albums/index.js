@@ -5,7 +5,8 @@ const albumSchema = {
   title: { required: true },
   artist: { required: true },
   genre: { required: true },
-  year: { required: true }
+  year: { required: true },
+  streaming_sites: { required: false}
 };
 
 // ROUTE: /albums
@@ -43,7 +44,7 @@ router.get('/', (req, res) => {
 
 function getAlbumsCount(mysqlPool) {
     return new Promise((resolve, reject) => {
-      mysqlPool.query('SELECT COUNT(*) AS count FROM albums', function (err, results) {
+      mysqlPool.query('SELECT COUNT(*) AS count FROM streaming_sites_albums', function (err, results) {
         if (err) {
           reject(err);
         } else {
@@ -66,7 +67,12 @@ function getAlbumsPage(page, totalCount, mysqlPool) {
       const offset = (page - 1) * numPerPage;
 
       mysqlPool.query(
-        'SELECT albums.id, name, genres.genre FROM albums JOIN genres ON albums.genre = genres.id ORDER BY id LIMIT ?,?',
+        'SELECT albums.id, title, artist, year, genres.genre, streaming_sites.name AS streaming_site \
+        FROM albums \
+        JOIN genres ON albums.genre = genres.id \
+        LEFT JOIN streaming_sites_albums ON albums.id = streaming_sites_albums.album_id \
+        LEFT JOIN streaming_sites ON streaming_sites_albums.site_id = streaming_sites.id \
+        ORDER BY albums.id LIMIT ?,?',
         [offset, numPerPage],
         function (err, results) {
           if (err) {
@@ -115,11 +121,13 @@ router.post('/', (req, res) => {
 
 function insertNewAlbum(album, mysqlPool) {
   return new Promise((resolve, reject) => {
-    albumVals = validation.extractValidFields(album, albumSchema);
+    sites = album.streaming_sites; //Add to table streaming_sites_albums
+    delete album.streaming_sites;
+    album = validation.extractValidFields(album, albumSchema);
     album.id = null;
     mysqlPool.query(
       'INSERT INTO albums SET ?',
-      albumVals,
+      album,
       function (err, result) {
         if (err) {
           reject(err);
@@ -153,12 +161,22 @@ router.get('/:albumID', (req, res) => {
 });
 
 function getAlbumByID(albumID, mysqlPool) {
+
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT albums.id, name, genres.genre FROM albums JOIN genres ON albums.genre = genres.id WHERE albums.id = ?', [albumID], function (err, results) {
+    sites = album.streaming_sites; //Add to table streaming_sites_albums
+    delete album.streaming_sites;
+    album = validation.extractValidFields(album, albumSchema);
+    album.id = null;
+    mysqlPool.query('SELECT albums.id, title, artist, year, genres.genre, streaming_sites.name AS streaming_site \
+     FROM albums \
+     JOIN genres ON albums.genre = genres.id \
+     LEFT JOIN streaming_sites_albums ON albums.id = streaming_sites_albums.album_id \
+     LEFT JOIN streaming_sites ON streaming_sites_albums.site_id = streaming_sites.id \
+     WHERE albums.id = ?', [albumID], function (err, results) {
       if (err) {
         reject(err);
       } else {
-        resolve(results[0]);
+        resolve(results);
       }
     });
   })
