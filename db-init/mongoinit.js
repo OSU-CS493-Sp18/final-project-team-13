@@ -2,6 +2,6 @@ db.createUser(
     {
         user: "mongo-user",
         pwd: "hunter2",
-        roles: [{ role: "readWrite", db: "musicdb" }]
+        roles: [{ role: "readWrite", db: "users" }]
     }
 )
