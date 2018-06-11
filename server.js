@@ -42,13 +42,14 @@ app.use('*', function(req, res, next){
     });
 })
 
-MongoClient.connect(mongoURL, {useNewUrlParser: true}, function (err, client) {
-	if (!err) {
-		app.locals.mongoDB = client.db(mongoDatabase);
+mongoConnect()
+	.then((client) => {
+		app.locals.mongoDB = client;
+	})
+	.then( () => {
 		app.listen(port, function () {
 			console.log("== Server is running on port", port);
 		});
-	}
-})
+	}) 
 
 
