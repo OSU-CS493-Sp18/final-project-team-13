@@ -5,6 +5,7 @@ const mysql = require('mysql');
 const api = require('./api');
 const app = express();
 const port = process.env.PORT || 8000;
+const MongoClient = require('mongodb').MongoClient;
 
 const { mongoConnect } = require('./lib/db')
 
