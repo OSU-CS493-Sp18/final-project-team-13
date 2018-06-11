@@ -5,6 +5,7 @@ const { router: genresRouter } = require('./genres');
 const { router: playlistsRouter } = require('./playlists');
 const { router: songsRouter } = require('./songs');
 const { router: artistsRouter } = require('./artists');
+const { router: albumsRouter } = require('./albums');
 
 router.get('/users/:userID/:playlistID', function(req, res, next) {
 	
@@ -23,5 +24,5 @@ router.use('/genres', genresRouter);
 router.use('/playlists', playlistsRouter);
 router.use('/songs', songsRouter);
 router.use('/artists', artistsRouter);
-
+router.use('/albums', albumsRouter);
 
